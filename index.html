@@ -17,11 +17,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
 
     <!-- Chosen Palette: Japanese Zen (Warm Neutrals, Matcha Green accent, Sakura Pink secondary) -->
-    <!-- Application Structure Plan: A dashboard-style learning hub. The content is divided into 4 main views: Overview (Dashboard with stats), Từ Vựng (Interactive Flashcards with search/filter), Số & Thời gian (Interactive grids), and Ngữ Pháp (Expandable rule blocks). This structure transforms static notes into an active recall study tool, prioritizing user interaction (flashcard flipping, filtering) to enhance memorization. -->
+    <!-- Application Structure Plan: A dashboard-style learning hub. The content is divided into 5 main views: Overview, Từ Vựng, Kanji (New!), Số & Thời gian, and Ngữ Pháp. Added Kanji view as requested. -->
     <!-- Visualization & Content Choices: 
-         - Overview -> Goal: Inform -> Donut Chart (Chart.js) -> Shows vocabulary distribution. Gives a sense of progress/scope.
-         - Từ Vựng -> Goal: Organize/Learn -> Interactive Grid Cards -> Flashcard toggle (blur meanings) -> Encourages active recall testing. 
-         - Ngữ Pháp -> Goal: Understand -> Highlighted Text Blocks -> Color-coded particles (は, の) -> Makes syntax rules visually distinct.
+         - Kanji -> Goal: Learn & Memorize -> Grid of Kanji Cards -> Flashcard toggle (blur readings) -> Encourages active recall for Onyomi/Kunyomi.
          - Confirming NO SVG/Mermaid used. Used Unicode emojis for icons. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
@@ -49,7 +47,7 @@
             }
         }
 
-        /* Flashcard hide meaning logic */
+        /* Flashcard hide meaning logic (Vocab) */
         .hide-meaning .meaning-text {
             filter: blur(5px);
             opacity: 0.5;
@@ -58,6 +56,19 @@
         }
         .hide-meaning .meaning-text:hover, 
         .hide-meaning .meaning-text:active {
+            filter: blur(0);
+            opacity: 1;
+        }
+
+        /* Flashcard hide reading logic (Kanji) */
+        .hide-reading .kanji-reading {
+            filter: blur(5px);
+            opacity: 0.3;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        .hide-reading .kanji-reading:hover, 
+        .hide-reading .kanji-reading:active {
             filter: blur(0);
             opacity: 1;
         }
@@ -107,6 +118,11 @@
                 </button>
             </li>
             <li class="flex-1 md:flex-none">
+                <button onclick="navigate('kanji')" id="nav-kanji" class="w-full text-left px-6 py-3 md:py-4 hover:bg-teal-600 transition-colors flex items-center gap-3 border-l-4 border-transparent">
+                    <span class="text-xl">🈴</span> <span class="hidden md:inline font-medium">Hán tự</span>
+                </button>
+            </li>
+            <li class="flex-1 md:flex-none">
                 <button onclick="navigate('numbers')" id="nav-numbers" class="w-full text-left px-6 py-3 md:py-4 hover:bg-teal-600 transition-colors flex items-center gap-3 border-l-4 border-transparent">
                     <span class="text-xl">🔢</span> <span class="hidden md:inline font-medium">Số & Thời gian</span>
                 </button>
@@ -151,6 +167,16 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onclick="navigate('kanji')">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-indigo-100 p-4 rounded-full text-indigo-700 text-2xl">🈴</div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-800">Bảng Hán Tự (Kanji)</h4>
+                                <p class="text-gray-500 text-sm">Các chữ Kanji sơ cấp thường gặp. Ôn tập Âm On và Âm Kun.</p>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onclick="navigate('grammar')">
                         <div class="flex items-center gap-4">
@@ -160,11 +186,6 @@
                                 <p class="text-gray-500 text-sm">Nắm vững các mẫu câu danh từ cơ bản và cách sử dụng trợ từ の, は.</p>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="bg-gradient-to-br from-teal-500 to-teal-700 text-white p-6 rounded-xl shadow-md mt-auto">
-                        <h4 class="font-bold text-xl mb-2">Mẹo học tập 💡</h4>
-                        <p class="text-teal-100 text-sm">Tiếng Nhật cần sự lặp lại. Hãy sử dụng chức năng <strong>"Chế độ học (Ẩn nghĩa)"</strong> trong phần Từ vựng và cố gắng nhớ ra cách đọc (Romaji) và chữ Nhật trước khi xem kết quả nhé!</p>
                     </div>
                 </div>
             </div>
@@ -212,6 +233,33 @@
             </div>
             <div id="vocab-empty" class="hidden text-center py-12 text-gray-500">
                 Không tìm thấy từ vựng nào phù hợp.
+            </div>
+        </section>
+
+        <!-- View: Kanji -->
+        <section id="view-kanji" class="hidden animate-fade-in">
+            <header class="mb-8">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+                    <h2 class="text-3xl font-bold text-gray-800">Hán Tự (Kanji) Sơ Cấp</h2>
+                    
+                    <!-- Interactive Toggle: Kanji Reading Mode -->
+                    <label class="flex items-center cursor-pointer bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50">
+                        <div class="relative">
+                            <input type="checkbox" id="kanji-flashcard-toggle" class="sr-only">
+                            <div class="block bg-gray-200 w-10 h-6 rounded-full transition-colors toggle-bg-kanji"></div>
+                            <div class="dot-kanji absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div>
+                        </div>
+                        <span class="ml-3 text-sm font-medium text-gray-700">Chế độ kiểm tra (Ẩn cách đọc)</span>
+                    </label>
+                </div>
+                <p class="text-gray-600 max-w-4xl">
+                    Danh sách các Hán tự cơ bản được trích xuất từ tài liệu. Bật <strong>"Chế độ kiểm tra"</strong> để làm mờ cách đọc Âm On/Âm Kun, giúp bạn tự ôn tập khả năng nhớ mặt chữ Kanji.
+                </p>
+            </header>
+
+            <!-- Kanji Grid -->
+            <div id="kanji-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <!-- Kanji Cards populated by JS -->
             </div>
         </section>
 
@@ -488,6 +536,36 @@
                 { cat: 'Ẩm thực', jp: 'ビール', romaji: 'biiru', vi: 'Bia' },
                 { cat: 'Ẩm thực', jp: 'ワイン', romaji: 'wain', vi: 'Rượu vang' }
             ],
+            kanji: [
+                { char: '日', onyomi: 'ニチ, ジツ', kunyomi: 'ひ, -か', vi: 'Ngày, Mặt trời (Nhật)' },
+                { char: '月', onyomi: 'ゲツ, ガツ', kunyomi: 'つき', vi: 'Tháng, Mặt trăng (Nguyệt)' },
+                { char: '人', onyomi: 'ジン, ニン', kunyomi: 'ひと', vi: 'Người (Nhân)' },
+                { char: '本', onyomi: 'ホン', kunyomi: 'もと', vi: 'Sách, Nguồn gốc (Bản)' },
+                { char: '学', onyomi: 'ガク', kunyomi: 'まな.ぶ', vi: 'Học tập (Học)' },
+                { char: '校', onyomi: 'コウ', kunyomi: '-', vi: 'Trường học (Hiệu)' },
+                { char: '生', onyomi: 'セイ, ショウ', kunyomi: 'い.きる, う.まれる', vi: 'Sống, Sinh ra (Sinh)' },
+                { char: '先', onyomi: 'セン', kunyomi: 'さき', vi: 'Trước (Tiên)' },
+                { char: '語', onyomi: 'ゴ', kunyomi: 'かた.る', vi: 'Ngôn ngữ (Ngữ)' },
+                { char: '円', onyomi: 'エン', kunyomi: 'まる.い', vi: 'Tiền Yên, Tròn (Viên)' },
+                { char: '一', onyomi: 'イチ, イツ', kunyomi: 'ひと.つ', vi: 'Số 1 (Nhất)' },
+                { char: '二', onyomi: 'ニ, ジ', kunyomi: 'ふた.つ', vi: 'Số 2 (Nhị)' },
+                { char: '三', onyomi: 'サン', kunyomi: 'みっ.つ', vi: 'Số 3 (Tam)' },
+                { char: '四', onyomi: 'シ', kunyomi: 'よっ.つ, よん', vi: 'Số 4 (Tứ)' },
+                { char: '五', onyomi: 'ゴ', kunyomi: 'いつ.つ', vi: 'Số 5 (Ngũ)' },
+                { char: '六', onyomi: 'ロク', kunyomi: 'むっ.つ', vi: 'Số 6 (Lục)' },
+                { char: '七', onyomi: 'シチ', kunyomi: 'なな.つ', vi: 'Số 7 (Thất)' },
+                { char: '八', onyomi: 'ハチ', kunyomi: 'やっ.つ', vi: 'Số 8 (Bát)' },
+                { char: '九', onyomi: 'キュウ, ク', kunyomi: 'ここの.つ', vi: 'Số 9 (Cửu)' },
+                { char: '十', onyomi: 'ジュウ', kunyomi: 'とお', vi: 'Số 10 (Thập)' },
+                { char: '百', onyomi: 'ヒャク', kunyomi: '-', vi: 'Trăm (Bách)' },
+                { char: '千', onyomi: 'セン', kunyomi: 'ち', vi: 'Nghìn (Thiên)' },
+                { char: '万', onyomi: 'マン, バン', kunyomi: '-', vi: 'Mười nghìn (Vạn)' },
+                { char: '水', onyomi: 'スイ', kunyomi: 'みず', vi: 'Nước (Thủy)' },
+                { char: '木', onyomi: 'ボク, モク', kunyomi: 'き', vi: 'Cây (Mộc)' },
+                { char: '肉', onyomi: 'ニク', kunyomi: '-', vi: 'Thịt (Nhục)' },
+                { char: '魚', onyomi: 'ギョ', kunyomi: 'さかな', vi: 'Cá (Ngư)' },
+                { char: '食', onyomi: 'ショク', kunyomi: 'た.べる', vi: 'Ăn (Thực)' }
+            ],
             calendar: {
                 months: ['一月 (1)', '二月 (2)', '三月 (3)', '四月 (しがつ - 4)', '五月 (5)', '六月 (6)', '七月 (しちがつ - 7)', '八月 (8)', '九月 (くがつ - 9)', '十月 (10)'],
                 days: [
@@ -586,7 +664,8 @@
             currentView: 'overview',
             vocabFilter: 'All',
             vocabSearchQuery: '',
-            flashcardMode: false
+            flashcardMode: false,
+            kanjiFlashcardMode: false
         };
 
         // --- DOM ELEMENTS ---
@@ -598,6 +677,8 @@
             vocabSearch: document.getElementById('vocab-search'),
             vocabEmpty: document.getElementById('vocab-empty'),
             flashcardToggle: document.getElementById('flashcard-toggle'),
+            kanjiGrid: document.getElementById('kanji-grid'),
+            kanjiFlashcardToggle: document.getElementById('kanji-flashcard-toggle'),
             monthsGrid: document.getElementById('months-grid'),
             daysGrid: document.getElementById('days-grid'),
             grammarContainer: document.getElementById('grammar-container'),
@@ -679,23 +760,43 @@
 
             els.vocabEmpty.classList.add('hidden');
             
-        const cardWrapperClass = state.flashcardMode ? 'hide-meaning' : '';
+            const cardWrapperClass = state.flashcardMode ? 'hide-meaning' : '';
 
-        els.vocabGrid.innerHTML = filtered.map(v => `
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${cardWrapperClass}">
-                <div>
-                    <span class="text-xs font-bold text-teal-600 uppercase tracking-wider mb-2 inline-block">${v.cat}</span>
-                    <h3 class="text-4xl font-black text-gray-800 mb-2" style="letter-spacing: 0.02em;">${v.jp}</h3>
-                    <p class="text-gray-500 font-mono text-sm mb-4">${v.romaji}</p>
+            els.vocabGrid.innerHTML = filtered.map(v => `
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${cardWrapperClass}">
+                    <div>
+                        <span class="text-xs font-bold text-teal-600 uppercase tracking-wider mb-2 inline-block">${v.cat}</span>
+                        <h3 class="text-4xl font-black text-gray-800 mb-2" style="letter-spacing: 0.02em;">${v.jp}</h3>
+                        <p class="text-gray-500 font-mono text-sm mb-4">${v.romaji}</p>
+                    </div>
+                    <div class="pt-3 border-t border-gray-100 mt-auto">
+                        <p class="text-gray-800 font-medium meaning-text">${v.vi}</p>
+                    </div>
                 </div>
-                <div class="pt-3 border-t border-gray-100 mt-auto">
-                    <p class="text-gray-800 font-medium meaning-text">${v.vi}</p>
-                </div>
-            </div>
-        `).join('');
-    }
+            `).join('');
+        }
 
-    // 3. Chart Logic (Dashboard)
+        // 3. Kanji Logic
+        function renderKanjiCards() {
+            const wrapperClass = state.kanjiFlashcardMode ? 'hide-reading' : '';
+            
+            els.kanjiGrid.innerHTML = appData.kanji.map(k => `
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between items-center text-center ${wrapperClass}">
+                    <h3 class="text-6xl font-black text-indigo-700 mb-4">${k.char}</h3>
+                    <div class="w-full kanji-reading">
+                        <div class="grid grid-cols-2 gap-2 text-xs mb-3 text-left bg-gray-50 p-2 rounded border border-gray-100">
+                            <div><span class="block text-gray-400 font-bold uppercase mb-1">On:</span> <span class="text-gray-700 font-mono">${k.onyomi || '-'}</span></div>
+                            <div><span class="block text-gray-400 font-bold uppercase mb-1">Kun:</span> <span class="text-gray-700 font-mono">${k.kunyomi || '-'}</span></div>
+                        </div>
+                    </div>
+                    <div class="pt-2 border-t border-gray-100 w-full mt-auto">
+                        <p class="text-gray-800 font-bold">${k.vi}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 4. Chart Logic (Dashboard)
         let chartInstance = null;
         function initChart() {
             if (chartInstance) return; // Prevent re-initialization
@@ -717,7 +818,8 @@
                         '#14b8a6', // teal-500
                         '#5eead4', // teal-300
                         '#f472b6', // pink-400
-                        '#fbbf24'  // amber-400
+                        '#fbbf24', // amber-400
+                        '#4f46e5'  // indigo-600
                     ],
                     borderWidth: 2,
                     borderColor: '#ffffff'
@@ -735,7 +837,7 @@
                             position: 'bottom',
                             labels: {
                                 padding: 20,
-                                font: { family: "'Segoe UI', sans-serif" }
+                                font: { family: "'Be Vietnam Pro', sans-serif" }
                             }
                         },
                         tooltip: {
@@ -758,7 +860,7 @@
             });
         }
 
-        // 4. Numbers & Calendar Logic
+        // 5. Numbers & Calendar Logic
         function initNumbers() {
             // Calendar grid rendering
             els.monthsGrid.innerHTML = appData.calendar.months.map(m => `
@@ -800,7 +902,7 @@
             });
         }
 
-        // 5. Grammar Logic
+        // 6. Grammar Logic
         function initGrammar() {
             els.grammarContainer.innerHTML = appData.grammar.map(rule => `
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -841,10 +943,29 @@
             renderVocabCards();
         });
 
+        els.kanjiFlashcardToggle.addEventListener('change', (e) => {
+            state.kanjiFlashcardMode = e.target.checked;
+            
+            // Toggle visual styling of the switch
+            const toggleBg = e.target.nextElementSibling;
+            const dot = toggleBg.nextElementSibling;
+            
+            if(state.kanjiFlashcardMode) {
+                toggleBg.classList.replace('bg-gray-200', 'bg-indigo-500');
+                dot.style.transform = 'translateX(100%)';
+            } else {
+                toggleBg.classList.replace('bg-indigo-500', 'bg-gray-200');
+                dot.style.transform = 'translateX(0)';
+            }
+
+            renderKanjiCards();
+        });
+
         // Initialize application
         function init() {
             renderVocabCategories();
             renderVocabCards();
+            renderKanjiCards();
             initNumbers();
             initGrammar();
             
