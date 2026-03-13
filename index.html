@@ -939,32 +939,35 @@
 
         // 5. Numbers & Calendar Logic
         function initNumbers() {
-            // Calendar grid rendering
+            // Cập nhật render Tháng để hiển thị JP, Romaji và VI
             els.monthsGrid.innerHTML = appData.calendar.months.map(m => `
-                <div class="p-2 border border-gray-200 rounded text-center bg-white">${m}</div>
-            `).join('');
-
-            els.daysGrid.innerHTML = appData.calendar.days.map(d => `
-                <div class="p-2 border border-red-100 rounded flex justify-between bg-white">
-                    <span class="text-gray-600">${d.vi}</span>
-                    <span class="font-bold text-red-600">${d.jp}</span>
+                <div class="p-2 border border-gray-200 rounded text-center bg-white hover:bg-gray-50 transition-colors">
+                    <span class="block text-lg font-bold text-gray-800">${m.jp}</span>
+                    <span class="block text-xs text-teal-600 font-mono">${m.romaji}</span>
+                    <span class="block text-sm text-gray-500">${m.vi}</span>
                 </div>
             `).join('');
 
-            // Sub-nav logic
+            // Cập nhật render Ngày để hiển thị JP, Romaji và VI
+            els.daysGrid.innerHTML = appData.calendar.days.map(d => `
+                <div class="p-3 border border-red-100 rounded flex flex-col items-center bg-white hover:bg-red-50 transition-colors">
+                    <span class="text-gray-500 text-xs mb-1">${d.vi}</span>
+                    <span class="font-bold text-red-600 text-lg">${d.jp}</span>
+                    <span class="text-xs text-red-400 font-mono mt-1">${d.romaji}</span>
+                </div>
+            `).join('');
+
+            // Sub-nav logic (Giữ nguyên)
             els.numTabBtns.forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    // Reset tabs
                     els.numTabBtns.forEach(b => {
                         b.classList.remove('active', 'text-teal-700', 'border-b-2', 'border-teal-500');
                         b.classList.add('text-gray-500');
                     });
-                    // Active tab
                     const targetBtn = e.currentTarget;
                     targetBtn.classList.add('active', 'text-teal-700', 'border-b-2', 'border-teal-500');
                     targetBtn.classList.remove('text-gray-500');
 
-                    // Show content
                     const targetId = targetBtn.getAttribute('data-target');
                     els.numContents.forEach(content => {
                         if (content.id === targetId) {
@@ -978,7 +981,6 @@
                 });
             });
         }
-
         // 6. Grammar Logic
         function initGrammar() {
             els.grammarContainer.innerHTML = appData.grammar.map(rule => `
@@ -1058,4 +1060,5 @@
     </script>
 </body>
 </html>
+
 
