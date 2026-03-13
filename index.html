@@ -192,12 +192,11 @@
         </section>
 
         <!-- View: Từ Vựng (Vocabulary) -->
-        <section id="view-vocab" class="hidden animate-fade-in">
+    <section id="view-vocab" class="hidden animate-fade-in">
             <header class="mb-8">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
                     <h2 class="text-3xl font-bold text-gray-800">Kho Từ Vựng</h2>
                     
-                    <!-- Interactive Toggle: Flashcard Mode -->
                     <label class="flex items-center cursor-pointer bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50">
                         <div class="relative">
                             <input type="checkbox" id="flashcard-toggle" class="sr-only">
@@ -208,31 +207,36 @@
                     </label>
                 </div>
                 <p class="text-gray-600 max-w-4xl">
-                    Khám phá và ghi nhớ từ vựng qua các thẻ thông tin tương tác. Sử dụng thanh tìm kiếm để tra cứu nhanh, hoặc lọc theo chủ đề. <strong>Bật "Chế độ học"</strong> để làm mờ nghĩa tiếng Việt; di chuột hoặc chạm vào từ để xem đáp án, giúp tăng cường khả năng hồi tưởng (active recall).
+                    Khám phá và ghi nhớ từ vựng qua các thẻ thông tin tương tác. Sử dụng thanh tìm kiếm để tra cứu nhanh, hoặc lọc theo chủ đề ở cột bên phải. <strong>Bật "Chế độ học"</strong> để làm mờ nghĩa tiếng Việt; di chuột hoặc chạm vào từ để xem đáp án, giúp tăng cường khả năng hồi tưởng (active recall).
                 </p>
             </header>
 
-            <!-- Filters -->
-            <div class="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div class="flex-1 w-full">
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">🔍</span>
-                        <input type="text" id="vocab-search" placeholder="Tìm kiếm bằng tiếng Nhật, Romaji hoặc Tiếng Việt..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+            <div class="flex flex-col lg:flex-row gap-8">
+                
+                <div class="flex-1 order-2 lg:order-1">
+                    <div class="mb-6 relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">🔍</span>
+                        <input type="text" id="vocab-search" placeholder="Tìm kiếm bằng tiếng Nhật, Romaji hoặc Tiếng Việt..." class="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow">
                     </div>
-                </div>
-                <div class="w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                    <div id="vocab-categories" class="flex gap-2 min-w-max">
-                        <!-- Categories populated by JS -->
-                    </div>
-                </div>
-            </div>
 
-            <!-- Vocabulary Grid -->
-            <div id="vocab-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <!-- Cards populated by JS -->
-            </div>
-            <div id="vocab-empty" class="hidden text-center py-12 text-gray-500">
-                Không tìm thấy từ vựng nào phù hợp.
+                    <div id="vocab-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                        </div>
+                    <div id="vocab-empty" class="hidden text-center py-12 text-gray-500 bg-white rounded-xl border border-gray-100 shadow-sm mt-4">
+                        <span class="text-4xl block mb-3">🍃</span>
+                        Không tìm thấy từ vựng nào phù hợp.
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-72 flex-shrink-0 order-1 lg:order-2">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 lg:sticky lg:top-6">
+                        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
+                            <span>🏷️</span> Phân loại Chủ đề
+                        </h3>
+                        <div id="vocab-categories" class="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
+                            </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
@@ -797,14 +801,24 @@
 
         // 2. Vocabulary Logic
         function renderVocabCategories() {
+            // JS tự động gom nhóm các cat (category) có trong appData
             const categories = ['All', ...new Set(appData.vocab.map(v => v.cat))];
-            els.vocabCategories.innerHTML = categories.map(cat => `
-                <button onclick="filterVocab('${cat}')" 
-                        class="px-4 py-2 rounded-full text-sm font-medium transition-colors border 
-                        ${state.vocabFilter === cat ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}">
-                    ${cat}
-                </button>
-            `).join('');
+            
+            els.vocabCategories.innerHTML = categories.map(cat => {
+                const isAll = cat === 'All';
+                const displayText = isAll ? 'Tất cả từ vựng' : cat;
+                const activeClass = state.vocabFilter === cat 
+                    ? 'bg-teal-600 text-white border-teal-600 shadow-md' 
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200';
+                
+                return `
+                    <button onclick="filterVocab('${cat}')" 
+                            class="px-4 py-3 lg:py-3 rounded-xl text-sm font-medium transition-all border text-left flex-shrink-0 lg:w-full whitespace-nowrap lg:whitespace-normal flex justify-between items-center group ${activeClass}">
+                        <span>${displayText}</span>
+                        ${state.vocabFilter === cat ? '<span class="text-teal-200">●</span>' : '<span class="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity">►</span>'}
+                    </button>
+                `;
+            }).join('');
         }
 
         function filterVocab(category) {
@@ -1072,6 +1086,7 @@
     </script>
 </body>
 </html>
+
 
 
 
